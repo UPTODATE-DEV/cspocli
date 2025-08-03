@@ -1,0 +1,7 @@
+requests>=2.25.0
+click>=8.0.0
+cryptography>=3.4.0
+mnemonic>=0.20.0
+bech32>=1.2.0
+colorama>=0.4.4
+tqdm>=4.62.0
