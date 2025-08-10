@@ -1,4 +1,4 @@
-# Cardano SPO CLI Usage Guide
+# Cardano SPO CLI v1.1.0 Usage Guide
 
 ## Prerequisites: Python & pip
 

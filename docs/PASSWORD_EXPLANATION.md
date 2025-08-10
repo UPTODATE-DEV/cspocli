@@ -1,4 +1,4 @@
-# Password Explanation for Global Installation
+# Password Explanation for Global Installation - Cardano SPO CLI v1.1.0
 
 ## Why is a password needed?
 

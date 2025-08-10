@@ -1,4 +1,4 @@
-# Cardano SPO CLI - Command Reference
+# Cardano SPO CLI v1.1.0 - Command Reference
 
 ## Overview
 
@@ -20,37 +20,63 @@ Display the main help menu with all available commands.
 
 ### `cspocli generate` - Generate Wallet
 
-Generate a secure Cardano wallet for stake pool operations.
+Generate secure Cardano wallets for stake pool operations.
 
 #### Basic Usage
 
 ```bash
+# Generate all wallets (pledge + rewards) with shared mnemonic
+cspocli generate --ticker MYPOOL
+
+# Generate complete stake pool files
+cspocli generate --ticker MYPOOL --complete
+
+# Generate specific wallet type
 cspocli generate --ticker MYPOOL --purpose pledge
-cspocli generate -t ADA -p rewards
 ```
 
 #### Required Options
 
-| Option      | Short | Description             | Example            |
-| ----------- | ----- | ----------------------- | ------------------ |
-| `--ticker`  | `-t`  | Your pool ticker symbol | `--ticker MYPOOL`  |
-| `--purpose` | `-p`  | Wallet purpose          | `--purpose pledge` |
+| Option     | Short | Description             | Example           |
+| ---------- | ----- | ----------------------- | ----------------- |
+| `--ticker` | `-t`  | Your pool ticker symbol | `--ticker MYPOOL` |
 
 #### Optional Options
 
-| Option        | Short | Description                              | Default |
-| ------------- | ----- | ---------------------------------------- | ------- |
-| `--force`     | `-f`  | Force regeneration even if wallet exists | `false` |
-| `--no-banner` |       | Skip welcome banner display              | `false` |
-| `--quiet`     | `-q`  | Quiet mode - JSON output only            | `false` |
-| `--simple`    | `-s`  | Use simplified mode (no external tools)  | `false` |
+| Option        | Short | Description                              | Default   |
+| ------------- | ----- | ---------------------------------------- | --------- |
+| `--purpose`   | `-p`  | Wallet purpose (pledge, rewards, all)    | `all`     |
+| `--network`   | `-n`  | Cardano network (mainnet, testnet, etc.) | `mainnet` |
+| `--complete`  | `-c`  | Generate complete stake pool files       | `false`   |
+| `--force`     | `-f`  | Force regeneration even if wallet exists | `false`   |
+| `--no-banner` |       | Skip welcome banner display              | `false`   |
+| `--quiet`     | `-q`  | Quiet mode - JSON output only            | `false`   |
+| `--simple`    | `-s`  | Use simplified mode (no external tools)  | `false`   |
 
 #### Examples
 
-**Basic wallet generation:**
+**Generate all wallets (recommended):**
 
 ```bash
-cspocli generate --ticker MYPOOL --purpose pledge
+cspocli generate --ticker MYPOOL
+```
+
+**Generate complete stake pool files:**
+
+```bash
+cspocli generate --ticker MYPOOL --complete
+```
+
+**Generate specific wallet with complete files:**
+
+```bash
+cspocli generate --ticker MYPOOL --purpose pledge --complete
+```
+
+**Generate testnet wallets:**
+
+```bash
+cspocli generate --ticker MYPOOL --network testnet --complete
 ```
 
 **Generate rewards wallet with simplified mode:**
@@ -73,6 +99,8 @@ cspocli generate --ticker TEST --purpose pledge --quiet --no-banner
 
 #### Generated Files
 
+##### Standard Mode
+
 For each wallet, the CLI creates these files in `~/.CSPO_{TICKER}/{PURPOSE}/`:
 
 | File                              | Description                 | Security      |
@@ -82,6 +110,72 @@ For each wallet, the CLI creates these files in `~/.CSPO_{TICKER}/{PURPOSE}/`:
 | `{TICKER}-{PURPOSE}.staking_skey` | Private staking key         | **SENSITIVE** |
 | `{TICKER}-{PURPOSE}.staking_vkey` | Public staking key          | Public        |
 | `{TICKER}-{PURPOSE}.mnemonic.txt` | 24-word recovery phrase     | **SENSITIVE** |
+
+##### Complete Mode (`--complete`)
+
+Generates all files needed for complete stake pool operations:
+
+**Addresses:**
+
+- `base.addr` - Base address (with staking)
+- `payment.addr` - Payment-only address
+- `reward.addr` - Reward address
+
+**Keys:**
+
+- `payment.skey/vkey` - Payment keys
+- `stake.skey/vkey` - Staking keys
+- `cc-cold.skey/vkey` - Cold keys (stake pool)
+- `cc-hot.skey/vkey` - Hot keys (stake pool)
+- `drep.skey/vkey` - DRep keys
+- `ms_payment.skey/vkey` - Multi-signature payment keys
+- `ms_stake.skey/vkey` - Multi-signature staking keys
+- `ms_drep.skey/vkey` - Multi-signature DRep keys
+
+**Credentials:**
+
+- `payment.cred` - Payment credential
+- `stake.cred` - Staking credential
+- `ms_payment.cred` - Multi-signature payment credential
+- `ms_stake.cred` - Multi-signature staking credential
+
+**Certificates:**
+
+- `stake.cert` - Staking certificate
+- `delegation.cert` - Delegation certificate
+
+#### Shared Mnemonic Feature
+
+- All wallets for the same ticker share the same recovery phrase
+- Stored in `~/.CSPO_{TICKER}/{TICKER}-shared.mnemonic.txt`
+- Makes wallet management easier and more secure
+
+---
+
+### `cspocli export` - Export Wallet
+
+Export wallet files in encrypted ZIP format for secure backup and transfer.
+
+#### Usage
+
+```bash
+cspocli export --ticker MYPOOL --purpose pledge --password mypassword
+```
+
+#### Options
+
+| Option       | Description                     | Required |
+| ------------ | ------------------------------- | -------- |
+| `--ticker`   | Pool ticker symbol              | Yes      |
+| `--purpose`  | Wallet purpose (pledge/rewards) | Yes      |
+| `--password` | Password for encrypted ZIP      | Yes      |
+
+#### Output
+
+- Creates encrypted ZIP archive
+- Contains all wallet files
+- Protected with provided password
+- Suitable for secure backup and transfer
 
 ---
 
@@ -104,7 +198,7 @@ cspocli version
 **Example:**
 
 ```
-Cardano SPO CLI v0.1.0+fe1e288
+Cardano SPO CLI v1.0.0+fe1e288
 Commit: fe1e288
 ⚠️  Working tree has uncommitted changes
 ```
@@ -118,6 +212,7 @@ Commit: fe1e288
 ```bash
 cspocli --help              # Main help
 cspocli generate --help     # Generate command help
+cspocli export --help       # Export command help
 cspocli version --help      # Version command help
 ```
 
@@ -128,7 +223,7 @@ cspocli version --help      # Version command help
 ### 1. Interactive Mode (Default)
 
 ```bash
-cspocli generate --ticker MYPOOL --purpose pledge
+cspocli generate --ticker MYPOOL
 ```
 
 - Shows welcome banner
@@ -137,7 +232,18 @@ cspocli generate --ticker MYPOOL --purpose pledge
 - Shows detailed output
 - Provides next steps
 
-### 2. Scripting Mode
+### 2. Complete Stake Pool Generation
+
+```bash
+cspocli generate --ticker MYPOOL --complete
+```
+
+- Generates all stake pool files
+- Creates keys, addresses, credentials, certificates
+- Requires real Cardano tools
+- Professional stake pool setup
+
+### 3. Scripting Mode
 
 ```bash
 cspocli generate --ticker TEST --purpose pledge --quiet --no-banner
@@ -148,7 +254,7 @@ cspocli generate --ticker TEST --purpose pledge --quiet --no-banner
 - No banners or warnings
 - Suitable for automation
 
-### 3. Simplified Mode
+### 4. Simplified Mode
 
 ```bash
 cspocli generate --ticker ADA --purpose rewards --simple
@@ -159,7 +265,7 @@ cspocli generate --ticker ADA --purpose rewards --simple
 - Good for testing and development
 - Faster execution
 
-### 4. Force Mode
+### 5. Force Mode
 
 ```bash
 cspocli generate --ticker MYPOOL --purpose pledge --force
@@ -168,6 +274,16 @@ cspocli generate --ticker MYPOOL --purpose pledge --force
 - Overwrites existing wallets
 - No confirmation prompts
 - Useful for regeneration
+
+### 6. Network-Specific Generation
+
+```bash
+cspocli generate --ticker MYPOOL --network testnet --complete
+```
+
+- Generates for specific network
+- Supports mainnet, testnet, preview, preprod
+- Network-specific addresses and keys
 
 ---
 
@@ -185,15 +301,21 @@ All generated files have secure permissions:
 All wallets are stored in the user's home directory:
 
 ```
-~/.CSPO_{TICKER}/{PURPOSE}/
+~/.CSPO_{TICKER}/
+├── {TICKER}-shared.mnemonic.txt
+├── pledge/
+│   └── [wallet files]
+└── rewards/
+    └── [wallet files]
 ```
 
 ### Sensitive Files
 
 These files contain sensitive information and should be handled carefully:
 
-- `*.staking_skey` - Private staking key
+- `*.skey` - All private keys
 - `*.mnemonic.txt` - 24-word recovery phrase
+- `{TICKER}-shared.mnemonic.txt` - Shared recovery phrase
 
 ---
 
@@ -201,12 +323,14 @@ These files contain sensitive information and should be handled carefully:
 
 ### Common Errors
 
-| Error                   | Cause                              | Solution                         |
-| ----------------------- | ---------------------------------- | -------------------------------- |
-| `Missing command`       | No command specified               | Use `cspocli --help`             |
-| `Missing option`        | Required option not provided       | Check `cspocli generate --help`  |
-| `Wallet already exists` | Wallet directory exists            | Use `--force` flag               |
-| `Invalid ticker`        | Ticker contains invalid characters | Use alphanumeric characters only |
+| Error                               | Cause                              | Solution                         |
+| ----------------------------------- | ---------------------------------- | -------------------------------- |
+| `Missing command`                   | No command specified               | Use `cspocli --help`             |
+| `Missing option`                    | Required option not provided       | Check `cspocli generate --help`  |
+| `Wallet already exists`             | Wallet directory exists            | Use `--force` flag               |
+| `Invalid ticker`                    | Ticker contains invalid characters | Use alphanumeric characters only |
+| `Real tools not available`          | Cardano tools missing              | Use `--simple` flag              |
+| `Complete mode requires real tools` | Complete mode needs tools          | Use standard mode instead        |
 
 ### Troubleshooting
 
@@ -214,6 +338,8 @@ These files contain sensitive information and should be handled carefully:
 2. **Get help:** `cspocli --help`
 3. **Check command help:** `cspocli generate --help`
 4. **Use quiet mode:** Add `--quiet` flag for JSON output
+5. **Use simplified mode:** Add `--simple` flag if tools unavailable
+6. **Check network:** Ensure correct `--network` option
 
 ---
 

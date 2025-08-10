@@ -12,7 +12,17 @@ For **development and testing**, you can use the simplified mode as a fallback.
 
 ## Installing Real Cardano Tools
 
-### Option 1: Manual Installation
+### Option 1: Automatic Installation (Recommended)
+
+```bash
+# Install CLI and tools automatically
+make install
+
+# Or install tools only
+make install-tools
+```
+
+### Option 2: Manual Installation
 
 #### cardano-cli
 
@@ -21,17 +31,17 @@ For **development and testing**, you can use the simplified mode as a fallback.
 # https://github.com/IntersectMBO/cardano-node/releases
 
 # For macOS
-curl -L -O https://github.com/IntersectMBO/cardano-node/releases/download/10.5.1/cardano-node-10.5.1-macos.tar.gz
-tar -xzf cardano-node-10.5.1-macos.tar.gz
+curl -L -O https://github.com/IntersectMBO/cardano-node/releases/download/10.11.1.0/cardano-node-10.11.1.0-macos.tar.gz
+tar -xzf cardano-node-10.11.1.0-macos.tar.gz
 sudo cp cardano-cli /usr/local/bin/
 
 # For Linux
-curl -L -O https://github.com/IntersectMBO/cardano-node/releases/download/10.5.1/cardano-node-10.5.1-linux.tar.gz
-tar -xzf cardano-node-10.5.1-linux.tar.gz
+curl -L -O https://github.com/IntersectMBO/cardano-node/releases/download/10.11.1.0/cardano-node-10.11.1.0-linux.tar.gz
+tar -xzf cardano-node-10.11.1.0-linux.tar.gz
 sudo cp cardano-cli /usr/local/bin/
 
 # For Windows
-# Download cardano-node-10.5.1-win64.zip and extract cardano-cli.exe
+# Download cardano-node-10.11.1.0-win64.zip and extract cardano-cli.exe
 ```
 
 #### cardano-address
@@ -57,7 +67,10 @@ sudo cp cardano-address /usr/local/bin/
 #### bech32
 
 ```bash
-# Download from IntersectMBO releases
+# Install via pip (recommended)
+pip install bech32
+
+# Or download from IntersectMBO releases
 # https://github.com/IntersectMBO/bech32/releases
 
 # For macOS
@@ -74,7 +87,7 @@ sudo cp bech32 /usr/local/bin/
 # Download bech32-v1.1.2-win64.zip and extract bech32.exe
 ```
 
-### Option 2: Using Package Managers
+### Option 3: Using Package Managers
 
 #### macOS (Homebrew)
 
@@ -112,8 +125,53 @@ Once you have installed the real Cardano tools, you can use them with the CLI:
 # The CLI will automatically detect and use real tools if available
 cspocli generate --ticker MYPOOL --purpose pledge
 
+# Generate complete stake pool files (requires real tools)
+cspocli generate --ticker MYPOOL --complete
+
 # Or explicitly use real tools (if implemented)
 cspocli generate --ticker MYPOOL --purpose pledge --real-tools
+```
+
+## Complete Stake Pool Generation
+
+The `--complete` option requires real Cardano tools and generates all files needed for professional stake pool operations:
+
+### Required Tools for Complete Mode
+
+- **cardano-address**: For key derivation and address generation
+- **cardano-cli**: For certificate generation (optional)
+- **bech32**: For address encoding/decoding
+
+### Generated Files (Complete Mode)
+
+```
+~/.CSPO_MYPOOL/pledge/
+├── base.addr              # Base address (with staking)
+├── payment.addr           # Payment-only address
+├── reward.addr            # Reward address
+├── payment.skey           # Private payment key
+├── payment.vkey           # Public payment key
+├── stake.skey             # Private staking key
+├── stake.vkey             # Public staking key
+├── cc-cold.skey           # Private cold key
+├── cc-cold.vkey           # Public cold key
+├── cc-hot.skey            # Private hot key
+├── cc-hot.vkey            # Public hot key
+├── drep.skey              # Private DRep key
+├── drep.vkey              # Public DRep key
+├── ms_payment.skey        # Private MS payment key
+├── ms_payment.vkey        # Public MS payment key
+├── ms_stake.skey          # Private MS staking key
+├── ms_stake.vkey          # Public MS staking key
+├── ms_drep.skey           # Private MS DRep key
+├── ms_drep.vkey           # Public MS DRep key
+├── payment.cred           # Payment credential
+├── stake.cred             # Staking credential
+├── ms_payment.cred        # MS payment credential
+├── ms_stake.cred          # MS staking credential
+├── stake.cert             # Staking certificate
+├── delegation.cert        # Delegation certificate
+└── MYPOOL-pledge.mnemonic.txt  # Recovery phrase
 ```
 
 ## Verification
@@ -130,6 +188,9 @@ which bech32
 cardano-cli --version
 cardano-address --version
 bech32 --help
+
+# Test complete generation
+cspocli generate --ticker TEST --complete
 ```
 
 ## Differences Between Real Tools and Simplified Mode
@@ -140,6 +201,7 @@ bech32 --help
 - ✅ Creates cryptographically valid keys
 - ✅ Compatible with Cardano blockchain
 - ✅ Production-ready
+- ✅ Supports complete stake pool generation
 - ❌ Requires manual installation of tools
 - ❌ More complex setup
 
@@ -151,6 +213,7 @@ bech32 --help
 - ✅ No external dependencies
 - ❌ Addresses are not real Cardano addresses
 - ❌ Keys are not cryptographically valid
+- ❌ Cannot generate complete stake pool files
 
 ## Security Considerations
 
@@ -166,6 +229,7 @@ bech32 --help
 - Addresses can be used on mainnet
 - **IMPORTANT**: Keep private keys secure
 - **IMPORTANT**: Test with small amounts first
+- **IMPORTANT**: Complete mode generates many sensitive files
 
 ## Troubleshooting
 
@@ -199,6 +263,16 @@ cardano-address --version
 # Update to latest versions if needed
 ```
 
+### ARM64 macOS Issues
+
+On ARM64 macOS, `cardano-cli` may crash due to Nix dependencies:
+
+```bash
+# The CLI will detect this and use cardano-address + bech32 only
+# This is sufficient for most operations
+cspocli generate --ticker MYPOOL --complete
+```
+
 ## Development vs Production
 
 ### Development/Testing
@@ -213,14 +287,20 @@ cspocli generate --ticker TEST --purpose pledge --simple
 ```bash
 # Use real tools (default)
 cspocli generate --ticker MYPOOL --purpose pledge
+
+# Use complete mode for full stake pool setup
+cspocli generate --ticker MYPOOL --complete
 ```
 
 ## File Structure
+
+### Standard Mode
 
 Both demo and real tools create the same file structure:
 
 ```
 ~/.CSPO_MYPOOL/
+├── MYPOOL-shared.mnemonic.txt
 ├── pledge/
 │   ├── MYPOOL-pledge.base_addr
 │   ├── MYPOOL-pledge.reward_addr
@@ -235,15 +315,55 @@ Both demo and real tools create the same file structure:
     └── MYPOOL-rewards.mnemonic.txt
 ```
 
+### Complete Mode
+
+Real tools with `--complete` create comprehensive file structure:
+
+```
+~/.CSPO_MYPOOL/
+├── MYPOOL-shared.mnemonic.txt
+├── pledge/
+│   ├── base.addr
+│   ├── payment.addr
+│   ├── reward.addr
+│   ├── payment.skey
+│   ├── payment.vkey
+│   ├── stake.skey
+│   ├── stake.vkey
+│   ├── cc-cold.skey
+│   ├── cc-cold.vkey
+│   ├── cc-hot.skey
+│   ├── cc-hot.vkey
+│   ├── drep.skey
+│   ├── drep.vkey
+│   ├── ms_payment.skey
+│   ├── ms_payment.vkey
+│   ├── ms_stake.skey
+│   ├── ms_stake.vkey
+│   ├── ms_drep.skey
+│   ├── ms_drep.vkey
+│   ├── payment.cred
+│   ├── stake.cred
+│   ├── ms_payment.cred
+│   ├── ms_stake.cred
+│   ├── stake.cert
+│   ├── delegation.cert
+│   └── MYPOOL-pledge.mnemonic.txt
+└── rewards/
+    └── [same structure as pledge]
+```
+
 ## Next Steps
 
 1. **For Development**: Use the simplified version as fallback
 2. **For Production**: Install real Cardano tools manually
 3. **For Testing**: Use the simplified version with small amounts
 4. **For Mainnet**: Use real tools with proper security measures
+5. **For Complete Setup**: Use `--complete` with real tools
 
 ## Support
 
 - **Documentation**: Check README.md and USAGE.md
+- **Complete Guide**: See `docs/COMPLETE_STAKE_POOL_GUIDE.md`
 - **Issues**: Report on GitHub
 - **Community**: Join Cardano Discord channels

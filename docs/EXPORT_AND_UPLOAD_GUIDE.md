@@ -1,4 +1,4 @@
-# 📦 Export and Upload Guide
+# 📦 Export and Upload Guide - Cardano SPO CLI v1.1.0
 
 ## 🔒 **Export Process Overview**
 
@@ -15,11 +15,21 @@ The Cardano SPO CLI provides a secure export feature that creates password-prote
 
 #### **✅ Included Files**
 
+##### **Standard Mode**
+
 - **Base Address**: `{TICKER}-{PURPOSE}.base_addr`
 - **Reward Address**: `{TICKER}-{PURPOSE}.reward_addr`
 - **Staking Private Key**: `{TICKER}-{PURPOSE}.staking_skey` (SENSITIVE)
 - **Staking Public Key**: `{TICKER}-{PURPOSE}.staking_vkey`
 - **Mnemonic Phrase**: `{TICKER}-{PURPOSE}.mnemonic.txt` (SENSITIVE)
+
+##### **Complete Mode** (`--complete`)
+
+- **Addresses**: `base.addr`, `payment.addr`, `reward.addr`
+- **Keys**: All `.skey` and `.vkey` files (payment, stake, cold, hot, DRep, multi-signature)
+- **Credentials**: All `.cred` files (payment, stake, multi-signature)
+- **Certificates**: All `.cert` files (stake, delegation)
+- **Mnemonic**: `{TICKER}-{PURPOSE}.mnemonic.txt` (SENSITIVE)
 
 ## 📋 **Export Commands**
 
@@ -30,6 +40,16 @@ The Cardano SPO CLI provides a secure export feature that creates password-prote
 cspocli export --ticker MYPOOL --purpose pledge --password mysecurepass123
 
 # Export rewards wallet
+cspocli export --ticker MYPOOL --purpose rewards --password mysecurepass123
+```
+
+### **Export Complete Stake Pool Files**
+
+```bash
+# Export complete pledge wallet files
+cspocli export --ticker MYPOOL --purpose pledge --password mysecurepass123
+
+# Export complete rewards wallet files
 cspocli export --ticker MYPOOL --purpose rewards --password mysecurepass123
 ```
 
@@ -51,12 +71,46 @@ cspocli export --help
 
 The export process collects all wallet files from the specified directory:
 
+#### **Standard Mode Structure**
+
 ```
 ~/.CSPO_MYPOOL/pledge/
 ├── MYPOOL-pledge.base_addr
 ├── MYPOOL-pledge.reward_addr
 ├── MYPOOL-pledge.staking_skey
 ├── MYPOOL-pledge.staking_vkey
+└── MYPOOL-pledge.mnemonic.txt
+```
+
+#### **Complete Mode Structure**
+
+```
+~/.CSPO_MYPOOL/pledge/
+├── base.addr
+├── payment.addr
+├── reward.addr
+├── payment.skey
+├── payment.vkey
+├── stake.skey
+├── stake.vkey
+├── cc-cold.skey
+├── cc-cold.vkey
+├── cc-hot.skey
+├── cc-hot.vkey
+├── drep.skey
+├── drep.vkey
+├── ms_payment.skey
+├── ms_payment.vkey
+├── ms_stake.skey
+├── ms_stake.vkey
+├── ms_drep.skey
+├── ms_drep.vkey
+├── payment.cred
+├── stake.cred
+├── ms_payment.cred
+├── ms_stake.cred
+├── stake.cert
+├── delegation.cert
 └── MYPOOL-pledge.mnemonic.txt
 ```
 

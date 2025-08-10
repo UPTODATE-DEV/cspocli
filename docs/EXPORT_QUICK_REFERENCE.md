@@ -1,63 +1,69 @@
-# 📦 Export Quick Reference
+# 📦 Export Quick Reference - Cardano SPO CLI v1.1.0
 
 ## 🚀 **Quick Export Commands**
 
-### **Export Pledge Wallet**
-
-```bash
-cspocli export --ticker MYPOOL --purpose pledge --password mysecurepass123
-```
-
-### **Export Rewards Wallet**
-
-```bash
-cspocli export --ticker MYPOOL --purpose rewards --password mysecurepass123
-```
-
-### **Export Both Wallets**
+### **Standard Wallet Export**
 
 ```bash
 # Export pledge wallet
-cspocli export --ticker MYPOOL --purpose pledge --password mysecurepass123
+cspocli export --ticker MYPOOL --purpose pledge --password mypassword
 
 # Export rewards wallet
-cspocli export --ticker MYPOOL --purpose rewards --password mysecurepass123
+cspocli export --ticker MYPOOL --purpose rewards --password mypassword
+```
+
+### **Complete Stake Pool Export**
+
+```bash
+# Export complete pledge wallet (all files)
+cspocli export --ticker MYPOOL --purpose pledge --password mypassword
+
+# Export complete rewards wallet (all files)
+cspocli export --ticker MYPOOL --purpose rewards --password mypassword
 ```
 
 ## 📁 **Generated Files**
 
-### **Export Output**
+### **Standard Export**
 
-```
-~/.CSPO_MYPOOL/pledge/
-├── MYPOOL-pledge-export.zip.enc    # 🔒 Encrypted archive
-└── MYPOOL-pledge-export.key        # 🔑 Decryption key
-```
+- `MYPOOL-pledge-export.zip.enc` - Encrypted archive
+- `MYPOOL-pledge-export.key` - Decryption key
 
-### **Archive Contents**
+### **Complete Export**
 
-```
-MYPOOL-pledge.base_addr
-MYPOOL-pledge.reward_addr
-MYPOOL-pledge.staking_skey
-MYPOOL-pledge.staking_vkey
-MYPOOL-pledge.mnemonic.txt
-```
+- `MYPOOL-pledge-export.zip.enc` - Encrypted archive (all files)
+- `MYPOOL-pledge-export.key` - Decryption key
 
-## 🔓 **Quick Decryption**
-
-### **Python Script**
+## 🔓 **Decryption Script**
 
 ```bash
+#!/bin/bash
+# decrypt_export.sh
+
+TICKER=$1
+PURPOSE=$2
+PASSWORD=$3
+
+if [ -z "$TICKER" ] || [ -z "$PURPOSE" ] || [ -z "$PASSWORD" ]; then
+    echo "Usage: ./decrypt_export.sh TICKER PURPOSE PASSWORD"
+    echo "Example: ./decrypt_export.sh MYPOOL pledge mypassword"
+    exit 1
+fi
+
+# Decrypt the export
 python3 -c "
+import base64
 from cryptography.fernet import Fernet
 import zipfile
 import tempfile
+import os
 
-# Load key and encrypted file
-with open('MYPOOL-pledge-export.key', 'rb') as f:
+# Read the key file
+with open('${TICKER}-${PURPOSE}-export.key', 'rb') as f:
     key = f.read()
-with open('MYPOOL-pledge-export.zip.enc', 'rb') as f:
+
+# Read the encrypted file
+with open('${TICKER}-${PURPOSE}-export.zip.enc', 'rb') as f:
     encrypted_data = f.read()
 
 # Decrypt
@@ -65,150 +71,138 @@ cipher = Fernet(key)
 decrypted_data = cipher.decrypt(encrypted_data)
 
 # Extract ZIP
-with tempfile.NamedTemporaryFile(suffix='.zip') as tmp:
+with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
     tmp.write(decrypted_data)
-    tmp.flush()
+    tmp_path = tmp.name
 
-    with zipfile.ZipFile(tmp.name, 'r') as zipf:
-        zipf.extractall('decrypted_wallet')
-        print('Files extracted to: decrypted_wallet/')
+# Extract files
+with zipfile.ZipFile(tmp_path, 'r') as zipf:
+    zipf.extractall('${TICKER}-${PURPOSE}-decrypted')
+
+# Clean up
+os.unlink(tmp_path)
+
+print(f'Files extracted to: ${TICKER}-${PURPOSE}-decrypted/')
 "
 ```
 
-## 📤 **Quick Upload Methods**
+## 📤 **Upload Methods**
 
-### **SCP Transfer**
+### **Secure Portal Upload**
+
+1. **Prepare Files**
+
+   ```bash
+   # For standard export
+   ls -la MYPOOL-pledge-export.zip.enc
+   ls -la MYPOOL-pledge-export.key
+
+   # For complete export
+   ls -la MYPOOL-pledge-export.zip.enc
+   ls -la MYPOOL-pledge-export.key
+   ```
+
+2. **Upload to Portal**
+   - Upload both `.enc` and `.key` files
+   - Provide password separately via secure channel
+   - Include ticker and purpose information
+
+### **Manual File Transfer**
 
 ```bash
-# Upload encrypted archive
-scp MYPOOL-pledge-export.zip.enc user@server:/secure/location/
+# Copy files to secure location
+cp MYPOOL-pledge-export.zip.enc /secure/location/
+cp MYPOOL-pledge-export.key /secure/location/
 
-# Upload key separately
-scp MYPOOL-pledge-export.key user@server:/secure-keys/
+# Verify transfer
+ls -la /secure/location/MYPOOL-pledge-export.*
 ```
 
-### **Cloud Storage**
+## 🔒 **Security Checklist**
 
-```bash
-# AWS S3
-aws s3 cp MYPOOL-pledge-export.zip.enc s3://my-secure-bucket/
+### **Before Export**
 
-# Google Cloud
-gcloud storage cp MYPOOL-pledge-export.zip.enc gs://my-backup-bucket/
-```
+- [ ] Verify wallet files exist
+- [ ] Use strong password (12+ characters)
+- [ ] Check file permissions (600 for sensitive files)
+- [ ] Backup original files
 
-### **Local Backup**
+### **After Export**
 
-```bash
-# Copy to encrypted USB
-cp MYPOOL-*-export.zip.enc /Volumes/ENCRYPTED_USB/backups/
-cp MYPOOL-*-export.key /Volumes/ENCRYPTED_USB/keys/
-```
-
-## 🔐 **Security Checklist**
-
-### **✅ Export Security**
-
-- [ ] Use strong password (16+ characters)
+- [ ] Verify encrypted file size
+- [ ] Test decryption on separate system
 - [ ] Store key file separately from archive
-- [ ] Verify export completed successfully
-- [ ] Check file permissions (600)
+- [ ] Use secure transfer method
 
-### **✅ Upload Security**
+### **For Upload**
 
-- [ ] Use encrypted transfer (SCP, SFTP)
-- [ ] Upload key file separately
-- [ ] Verify upload completion
-- [ ] Monitor access logs
+- [ ] Verify file integrity
+- [ ] Use secure portal or encrypted transfer
+- [ ] Provide password via separate channel
+- [ ] Confirm receipt with operator
 
-### **✅ Backup Strategy**
+## ⚠️ **Important Notes**
 
-- [ ] Multiple backup locations
-- [ ] Different storage providers
-- [ ] Physical backup (USB drive)
-- [ ] Test decryption process
+### **File Sizes**
 
-## 🚨 **Troubleshooting**
+- **Standard Export**: ~2-5 KB
+- **Complete Export**: ~15-25 KB
 
-### **Export Issues**
+### **Password Requirements**
 
-```bash
-# Check if wallet exists
-ls ~/.CSPO_MYPOOL/pledge/
+- Minimum 8 characters
+- Include uppercase, lowercase, numbers
+- Avoid common words or patterns
 
-# Regenerate if needed
-cspocli generate --ticker MYPOOL --purpose pledge --force
-```
+### **Storage Recommendations**
 
-### **Decryption Issues**
+- Store encrypted file and key separately
+- Use different storage locations
+- Regular backup of both files
+- Secure deletion of original files after verification
 
-```bash
-# Verify files exist
-ls -la MYPOOL-*-export.*
+## 🆘 **Troubleshooting**
 
-# Check file integrity
-file MYPOOL-pledge-export.zip.enc
-file MYPOOL-pledge-export.key
-```
+### **Common Issues**
 
-### **Upload Issues**
+1. **"File not found"**
 
-```bash
-# Check file permissions
-ls -la MYPOOL-*-export.*
+   ```bash
+   # Check if wallet exists
+   ls -la ~/.CSPO_MYPOOL/pledge/
+   ```
 
-# Test connectivity
-ping upload-server.com
+2. **"Permission denied"**
 
-# Check storage space
-df -h
-```
+   ```bash
+   # Fix permissions
+   chmod 600 ~/.CSPO_MYPOOL/pledge/*.skey
+   chmod 600 ~/.CSPO_MYPOOL/pledge/*.mnemonic.txt
+   ```
 
-## 📊 **Workflow Examples**
+3. **"Decryption failed"**
+   ```bash
+   # Verify key file
+   ls -la MYPOOL-pledge-export.key
+   # Check file size (should be 44 bytes)
+   ```
 
-### **🎯 Pool Operator Setup**
-
-```bash
-# 1. Generate wallets
-cspocli generate --ticker MYPOOL --purpose pledge
-cspocli generate --ticker MYPOOL --purpose rewards
-
-# 2. Export for pool operator
-cspocli export --ticker MYPOOL --purpose pledge --password pool_pass
-cspocli export --ticker MYPOOL --purpose rewards --password pool_pass
-
-# 3. Upload to pool operator
-scp MYPOOL-*-export.zip.enc pool-operator@server:/pool-files/
-scp MYPOOL-*-export.key pool-operator@server:/secure-keys/
-```
-
-### **🎯 Secure Backup**
+### **Verification Commands**
 
 ```bash
-# 1. Export all wallets
-cspocli export --ticker MYPOOL --purpose pledge --password backup_pass
-cspocli export --ticker MYPOOL --purpose rewards --password backup_pass
+# Check export files
+ls -la MYPOOL-pledge-export.*
 
-# 2. Upload to multiple locations
-aws s3 cp MYPOOL-*-export.zip.enc s3://my-secure-backup/
-gcloud storage cp MYPOOL-*-export.zip.enc gs://my-backup-bucket/
-cp MYPOOL-*-export.zip.enc /Volumes/ENCRYPTED_USB/backups/
+# Verify file sizes
+wc -c MYPOOL-pledge-export.zip.enc
+wc -c MYPOOL-pledge-export.key
+
+# Test decryption
+./decrypt_export.sh MYPOOL pledge mypassword
 ```
 
-## 🎉 **Success Indicators**
+## 📞 **Support**
 
-### **✅ Export Success**
-
-- "✅ Export created" message
-- Encrypted file smaller than original
-- Key file is 44 characters (base64)
-- No error messages
-
-### **✅ Upload Success**
-
-- Files appear in destination
-- No network errors
-- Correct file sizes
-- Proper permissions maintained
-
-**For detailed documentation, see [Export & Upload Guide](EXPORT_AND_UPLOAD_GUIDE.md)** 📚
+- **Email**: support@cardano-spo-cli.org
+- **Documentation**: See `docs/EXPORT_AND_UPLOAD_GUIDE.md`
+- **Examples**: See `USAGE.md`
