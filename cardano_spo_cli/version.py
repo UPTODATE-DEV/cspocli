@@ -27,7 +27,7 @@ def get_git_version() -> str:
     except Exception:
         pass
 
-    return "0.1.0"
+    return "1.1.2"
 
 
 def get_git_commit_hash() -> Optional[str]:
@@ -82,4 +82,6 @@ def get_version_info() -> dict:
         "is_dirty": is_dirty,
         "full_version": get_full_version(),
     }
+
+
 # Version management

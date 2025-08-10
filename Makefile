@@ -9,6 +9,7 @@ help:
 	@echo ""
 	@echo "  make install        - Install CLI globally + Cardano tools (recommended)"
 	@echo "  make install-global - Install CLI globally + Cardano tools (alternative)"
+	@echo "  make install-cli-only - Install CLI globally only (skip Cardano tools)"
 	@echo "  make install-tools  - Install only Cardano tools (cardano-cli, cardano-address, bech32)"
 	@echo "  make uninstall      - Remove global installation"
 	@echo "  make test           - Run tests"
@@ -20,6 +21,10 @@ help:
 	@echo "  (cardano-cli, cardano-address, bech32) for production use."
 	@echo "  On ARM64 systems, tools will use simplified mode as fallback."
 	@echo "  Global installation makes 'cspocli' available everywhere."
+	@echo ""
+	@echo "Troubleshooting:"
+	@echo "  If 'make install' fails on ARM64 macOS, use 'make install-cli-only'"
+	@echo "  Then manually install tools with: ./install-cardano-tools-universal.sh"
 	@echo ""
 
 # Global installation (recommended - no activation needed)
@@ -38,8 +43,8 @@ install:
 	pip install -e .
 	@echo ""
 	@echo "Installing Cardano tools for professional use..."
-	@chmod +x install-cardano-tools.sh && \
-	./install-cardano-tools.sh
+	@chmod +x install-cardano-tools-universal.sh && \
+	./install-cardano-tools-universal.sh
 	@echo ""
 	@echo "Creating global cspocli script..."
 	@echo "⚠️  You will be prompted for your computer password (not sudo password)"
@@ -147,6 +152,61 @@ install-tools:
 	@echo "✅ Cardano tools installation completed!"
 	@echo "📖 You can now use real tools mode:"
 	@echo "  cspocli generate --ticker MYPOOL --purpose pledge"
+	@echo ""
+
+# CLI-only installation (skips Cardano tools - for when tools are already installed)
+install-cli-only:
+	@echo "🌍 Installing Cardano SPO CLI globally (CLI only)..."
+	@echo "=================================================="
+	@echo ""
+	@if [ ! -d "venv" ]; then \
+		echo "Creating virtual environment..."; \
+		python3 -m venv venv; \
+	fi
+	@echo "Installing dependencies in virtual environment..."
+	@source venv/bin/activate && \
+	pip install --upgrade pip && \
+	pip install -r requirements.txt && \
+	pip install -e .
+	@echo ""
+	@echo "Creating global cspocli script..."
+	@echo "⚠️  You will be prompted for your computer password (not sudo password)"
+	@echo "   This is needed to write to /usr/local/bin/"
+	@echo ""
+	@CURRENT_DIR="$(shell pwd)" && \
+	echo '#!/bin/bash' > /tmp/cspocli_script && \
+	echo 'CARDANO_SPO_DIR="'$$CURRENT_DIR'"' >> /tmp/cspocli_script && \
+	echo 'if [ -d "$$CARDANO_SPO_DIR" ] && [ -f "$$CARDANO_SPO_DIR/venv/bin/activate" ]; then' >> /tmp/cspocli_script && \
+	echo '    source "$$CARDANO_SPO_DIR/venv/bin/activate"' >> /tmp/cspocli_script && \
+	echo '    python -m cardano_spo_cli "$$@"' >> /tmp/cspocli_script && \
+	echo 'else' >> /tmp/cspocli_script && \
+	echo '    echo "❌ Cardano SPO CLI not found in $$CARDANO_SPO_DIR"' >> /tmp/cspocli_script && \
+	echo '    echo "Please run '\''make install'\'' first."' >> /tmp/cspocli_script && \
+	echo '    exit 1' >> /tmp/cspocli_script && \
+	echo 'fi' >> /tmp/cspocli_script && \
+	sudo cp /tmp/cspocli_script /usr/local/bin/cspocli && \
+	sudo chmod +x /usr/local/bin/cspocli && \
+	rm /tmp/cspocli_script
+	@echo "✅ Global cspocli script created"
+	@echo ""
+	@echo "Testing global installation..."
+	@cspocli --help || \
+		(echo "❌ Global cspocli failed to run!"; exit 1)
+	@echo "✅ Global cspocli works correctly!"
+	@echo ""
+	@echo "🎉 CLI-only installation completed!"
+	@echo "================================="
+	@echo ""
+	@echo "✅ cspocli is now available globally"
+	@echo "✅ You can use 'cspocli' from any directory"
+	@echo "✅ No need to activate virtual environment"
+	@echo "⚠️  Note: Cardano tools installation was skipped"
+	@echo "   If you need tools, run: make install-tools"
+	@echo ""
+	@echo "📖 Usage examples:"
+	@echo "  cspocli generate --ticker MYPOOL --purpose pledge"
+	@echo "  cspocli generate --ticker MYPOOL --purpose pledge --network testnet"
+	@echo "  cspocli generate --ticker MYPOOL --purpose pledge --network preview"
 	@echo ""
 
 # Uninstall global installation

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cardano-spo-cli",
-    version="1.1.0",
+    version="1.1.2",
     author="danbaruka",
     author_email="danbaruka@users.noreply.github.com",
     description="Professional Cardano Stake Pool Operator CLI",

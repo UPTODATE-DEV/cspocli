@@ -65,15 +65,24 @@ class SimpleCardanoWalletGenerator:
 
         return private_key, public_key
 
-    def generate_address(self, public_key: bytes, is_stake: bool = False) -> str:
-        """Generate Cardano address"""
-        # Simplified address generation
-        prefix = "stake" if is_stake else "addr"
-        network = "test" if is_stake else "1"
+    def generate_address(
+        self, public_key: bytes, is_stake: bool = False, network: str = "mainnet"
+    ) -> str:
+        """Generate Cardano address with proper network handling"""
+        # Map network to proper prefixes
+        network_config = {
+            "mainnet": {"addr_prefix": "addr1", "stake_prefix": "stake1"},
+            "testnet": {"addr_prefix": "addr_test1", "stake_prefix": "stake_test1"},
+            "preview": {"addr_prefix": "addr_test1", "stake_prefix": "stake_test1"},
+            "preprod": {"addr_prefix": "addr_test1", "stake_prefix": "stake_test1"},
+        }
+
+        config = network_config.get(network, network_config["mainnet"])
+        prefix = config["stake_prefix"] if is_stake else config["addr_prefix"]
 
         # Create a simplified address format
         key_hash = hashlib.sha256(public_key).hexdigest()[:28]
-        return f"{prefix}{network}1{key_hash}"
+        return f"{prefix}{key_hash}"
 
     def generate_wallet(self, purpose: str, network: str = "mainnet"):
         """Generate a complete wallet (simplified version)"""
@@ -106,8 +115,10 @@ class SimpleCardanoWalletGenerator:
         click.echo(f"{Fore.GREEN}Staking keys derived{Style.RESET_ALL}")
 
         # Generate addresses
-        base_addr = self.generate_address(payment_vkey, is_stake=False)
-        reward_addr = self.generate_address(staking_vkey, is_stake=True)
+        base_addr = self.generate_address(payment_vkey, is_stake=False, network=network)
+        reward_addr = self.generate_address(
+            staking_vkey, is_stake=True, network=network
+        )
         click.echo(f"{Fore.GREEN}Addresses generated{Style.RESET_ALL}")
 
         # Create wallet directory

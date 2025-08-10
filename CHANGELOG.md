@@ -5,6 +5,14 @@ All notable changes to the Cardano SPO CLI project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2024-12-19
+
+### Fixed
+
+- **ARM64 macOS Compatibility**: Fixed crash when using `--complete` mode on ARM64 macOS
+- **Fallback Mechanism**: Improved error handling and fallback to simplified key generation
+- **Key Consistency**: Added missing `payment_addr` key for compatibility with file saving logic
+
 ## [1.1.0] - 2024-12-19
 
 ### Added
@@ -62,7 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-- **v1.1.0**: Current stable release with complete stake pool features
+- **v1.1.2**: Current stable release with ARM64 macOS compatibility fixes
+- **v1.1.0**: Stable release with complete stake pool features
 - **v1.0.0**: Major release with core functionality
 - **v0.1.0.16**: Initial development version
 - **v0.1.0.15**: Development milestone
